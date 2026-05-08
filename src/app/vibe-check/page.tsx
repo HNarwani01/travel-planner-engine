@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
 import NextLink from 'next/link';
 import { Button, Loader, useToast } from '@/components/ui';
+import { AutocompleteInput } from '@/components/ui/AutocompleteInput';
 
 // ─── Questions ────────────────────────────────────────────────────────────────
 
@@ -55,6 +56,12 @@ const QUESTIONS = [
   {
     question: 'Passport situation?',
     options: ['Domestic Only', 'Ready for International', 'Visa-Free Preferred'],
+  },
+  {
+    question: 'Any specific destination in mind?',
+    type: 'autocomplete',
+    isOptional: true,
+    options: [], // Keep options for type safety if needed, or update types
   },
 ] as const;
 
@@ -144,7 +151,7 @@ export default function VibeCheckPage() {
   };
 
   const handleNext = async () => {
-    if (!selected) return;
+    if (!selected && !(question as any).isOptional) return;
 
     if (!isLast) {
       setCurrentQ((q) => q + 1);
@@ -166,6 +173,7 @@ export default function VibeCheckPage() {
           destinationType: answers[5],
           travelStyle    : answers[6],
           passport       : answers[7],
+          specificDestination: answers[8],
         }),
       });
 
@@ -306,25 +314,43 @@ export default function VibeCheckPage() {
         </h1>
       </div>
 
-      {/* ── Options grid ── */}
+      {/* ── Options grid or Autocomplete ── */}
       <div
         style={{
           width               : '100%',
           maxWidth            : '640px',
-          display             : 'grid',
-          gridTemplateColumns : 'repeat(auto-fill, minmax(160px, 1fr))',
-          gap                 : '0.875rem',
           marginBottom        : '3rem',
         }}
       >
-        {question.options.map((option) => (
-          <OptionCard
-            key={option}
-            label={option}
-            selected={selected === option}
-            onSelect={() => handleSelect(option)}
-          />
-        ))}
+        {(question as any).type === 'autocomplete' ? (
+          <div style={{ marginTop: '1rem' }}>
+            <AutocompleteInput
+              placeholder="e.g. Paris, France (Optional)"
+              value={selected}
+              onChange={handleSelect}
+            />
+            <p style={{ color: '#8B8B9E', fontSize: '0.8rem', marginTop: '1rem', textAlign: 'center' }}>
+              Leave blank if you want us to surprise you!
+            </p>
+          </div>
+        ) : (
+          <div
+            style={{
+              display             : 'grid',
+              gridTemplateColumns : 'repeat(auto-fill, minmax(160px, 1fr))',
+              gap                 : '0.875rem',
+            }}
+          >
+            {(question as any).options.map((option: string) => (
+              <OptionCard
+                key={option}
+                label={option}
+                selected={selected === option}
+                onSelect={() => handleSelect(option)}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
       {/* ── Action button ── */}
@@ -333,10 +359,10 @@ export default function VibeCheckPage() {
           variant="primary"
           size="lg"
           fullWidth
-          disabled={!selected}
+          disabled={!selected && !(question as any).isOptional}
           onClick={handleNext}
         >
-          {isLast ? 'Check My Vibe ✨' : 'Next →'}
+          {isLast ? 'Check My Vibe ✨' : selected || (question as any).isOptional ? 'Next →' : 'Select an Option'}
         </Button>
       </div>
     </div>

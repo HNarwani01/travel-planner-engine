@@ -1,35 +1,53 @@
 import { NextResponse } from 'next/server';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { generateWithFallback, cleanJson } from '@/lib/gemini';
+import { sanitizeText, validateDestination } from '@/utils/sanitize';
+import { getClientIp, rateLimit } from '@/lib/rate-limit';
+import { validateSwapActivity } from '@/lib/validate';
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+interface SwapRequest {
+  destination: string;
+  activity: { place: string; description: string };
+  timeOfDay: string;
+}
 
 export async function POST(req: Request) {
+  const ip = getClientIp(req);
+  const limit = rateLimit(ip);
+  if (!limit.ok) {
+    return NextResponse.json(
+      { error: 'Too many requests. Please slow down.' },
+      {
+        status: 429,
+        headers: {
+          'Retry-After': String(limit.retryAfterSec),
+          'X-RateLimit-Limit': String(limit.limit),
+          'X-RateLimit-Remaining': '0',
+          'X-RateLimit-Reset': String(limit.resetAt),
+        },
+      },
+    );
+  }
+
   try {
-    const body = await req.json();
-    const { destination, activity, timeOfDay } = body;
+    const body = (await req.json()) as SwapRequest;
 
-    if (!destination || !activity || !timeOfDay) {
-      return NextResponse.json(
-        { error: 'Missing required fields' },
-        { status: 400 }
-      );
+    const dest = validateDestination(body.destination);
+    if (!dest.ok) {
+      return NextResponse.json({ error: dest.error }, { status: 400 });
     }
-
-    if (!process.env.GEMINI_API_KEY) {
-      return NextResponse.json(
-        { error: 'Gemini API key not configured' },
-        { status: 500 }
-      );
+    const timeOfDay = sanitizeText(body.timeOfDay, 50);
+    const place = sanitizeText(body.activity?.place, 200);
+    const description = sanitizeText(body.activity?.description, 1000);
+    if (!timeOfDay || !place || !description) {
+      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
-
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
     const prompt = `You are a travel planning expert.
-The user is planning a trip to ${destination}.
-They want to swap out the following ${timeOfDay} activity: 
-"${activity.place}: ${activity.description}"
+The user is planning a trip to ${dest.value}.
+They want to swap out the following ${timeOfDay} activity:
+"${place}: ${description}"
 
-Please provide ONE alternative activity for ${timeOfDay} in ${destination} that is different from the original one.
+Please provide ONE alternative activity for ${timeOfDay} in ${dest.value} that is different from the original one.
 Return ONLY valid JSON in this exact format, with no other text or markdown:
 {
   "time": "${timeOfDay}",
@@ -41,29 +59,35 @@ Return ONLY valid JSON in this exact format, with no other text or markdown:
 }
 Please ensure coordinates are roughly accurate.`;
 
-    const result = await model.generateContent(prompt);
-    const text = result.response.text();
+    const rawText = await generateWithFallback(prompt);
+    const cleanText = cleanJson(rawText);
 
-    const cleanText = text.replace(/```json\n?|\n?```/g, '').trim();
-
-    let newActivity;
+    let parsed: unknown;
     try {
-      newActivity = JSON.parse(cleanText);
-    } catch (e) {
-      console.error('Failed to parse Gemini response for swap:', text);
+      parsed = JSON.parse(cleanText);
+    } catch {
+      console.error('Failed to parse Gemini response for swap');
       return NextResponse.json(
         { error: 'Failed to generate valid swap activity data' },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
-    return NextResponse.json(newActivity);
+    const validated = validateSwapActivity(parsed);
+    if (!validated.ok || !validated.data) {
+      console.error('Swap response failed schema validation:', validated.error);
+      return NextResponse.json(
+        { error: 'Failed to generate valid swap activity data' },
+        { status: 500 },
+      );
+    }
 
+    return NextResponse.json(validated.data);
   } catch (error) {
     console.error('Error swapping activity:', error);
     return NextResponse.json(
       { error: 'Failed to swap activity. Please try again later.' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

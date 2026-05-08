@@ -7,6 +7,7 @@ import { useTrip } from '../../hooks/useTrip';
 import { INTERESTS, CONSTRAINTS, BUDGETS } from '../../constants';
 
 import { Button, Input, Loader } from '@/components/ui';
+import { AutocompleteInput } from '@/components/ui/AutocompleteInput';
 
 import ItineraryCard from '../../components/plan/ItineraryCard';
 import MapView from '../../components/plan/MapView';
@@ -76,7 +77,7 @@ export default function PlanPage() {
         <div style={{ maxWidth: '600px', margin: '0 auto', width: '100%', backgroundColor: 'var(--card-bg)', padding: '2rem', borderRadius: '16px', border: '1px solid var(--border-color)' }}>
           <div className="form-group">
             <label htmlFor="destination" className="form-label">Destination</label>
-            <Input 
+            <AutocompleteInput 
               id="destination"
               type="text" 
               placeholder="e.g. Kyoto, Japan" 

@@ -47,6 +47,7 @@ export interface InputProps {
   id?          : string
   autoComplete?: string
   maxLength?   : number
+  innerRef?    : React.Ref<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
 }
 
 // ─── Shared style helpers ────────────────────────────────────────────────────
@@ -84,7 +85,7 @@ function HelperText({ error, helperText }: { error?: string; helperText?: string
 
 // ─── Text / Email / Number input ─────────────────────────────────────────────
 
-function TextInput({ id, type = 'text', placeholder, value, defaultValue, onChange, error, disabled, required, icon, name, autoComplete, maxLength }: InputProps & { id: string }) {
+function TextInput({ id, type = 'text', placeholder, value, defaultValue, onChange, error, disabled, required, icon, name, autoComplete, maxLength, innerRef }: InputProps & { id: string }) {
   return (
     <div className="relative">
       {icon && (
@@ -93,6 +94,7 @@ function TextInput({ id, type = 'text', placeholder, value, defaultValue, onChan
         </span>
       )}
       <input
+        ref={innerRef as React.Ref<HTMLInputElement>}
         id={id}
         name={name}
         type={type}
@@ -125,7 +127,7 @@ function SearchInput(props: InputProps & { id: string }) {
 
 // ─── Password input ───────────────────────────────────────────────────────────
 
-function PasswordInput({ id, placeholder, value, defaultValue, onChange, error, disabled, required, name, autoComplete }: InputProps & { id: string }) {
+function PasswordInput({ id, placeholder, value, defaultValue, onChange, error, disabled, required, name, autoComplete, innerRef }: InputProps & { id: string }) {
   const [show, setShow] = useState(false)
 
   const EyeIcon = () => (
@@ -140,6 +142,7 @@ function PasswordInput({ id, placeholder, value, defaultValue, onChange, error, 
   return (
     <div className="relative">
       <input
+        ref={innerRef as React.Ref<HTMLInputElement>}
         id={id}
         name={name}
         type={show ? 'text' : 'password'}
@@ -167,9 +170,10 @@ function PasswordInput({ id, placeholder, value, defaultValue, onChange, error, 
 
 // ─── Textarea ─────────────────────────────────────────────────────────────────
 
-function TextareaInput({ id, placeholder, value, defaultValue, onChange, error, disabled, required, rows = 4, name, maxLength }: InputProps & { id: string }) {
+function TextareaInput({ id, placeholder, value, defaultValue, onChange, error, disabled, required, rows = 4, name, maxLength, innerRef }: InputProps & { id: string }) {
   return (
     <textarea
+      ref={innerRef as React.Ref<HTMLTextAreaElement>}
       id={id}
       name={name}
       placeholder={placeholder}
@@ -188,7 +192,7 @@ function TextareaInput({ id, placeholder, value, defaultValue, onChange, error, 
 
 // ─── Select ───────────────────────────────────────────────────────────────────
 
-function SelectInput({ id, placeholder, value, defaultValue, onChange, error, disabled, required, options = [], name }: InputProps & { id: string }) {
+function SelectInput({ id, placeholder, value, defaultValue, onChange, error, disabled, required, options = [], name, innerRef }: InputProps & { id: string }) {
   const normalised: SelectOption[] = options.map((o) =>
     typeof o === 'string' ? { label: o, value: o } : o
   )
@@ -202,6 +206,7 @@ function SelectInput({ id, placeholder, value, defaultValue, onChange, error, di
   return (
     <div className="relative">
       <select
+        ref={innerRef as React.Ref<HTMLSelectElement>}
         id={id}
         name={name}
         value={value}
@@ -318,6 +323,7 @@ export const Input = React.forwardRef<HTMLDivElement, InputProps>(
       id: idProp,
       autoComplete,
       maxLength,
+      innerRef,
     },
     ref
   ) => {

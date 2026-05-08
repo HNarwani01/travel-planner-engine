@@ -1,5 +1,16 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Environment variables
+
+Copy `.env.example` to `.env.local` and fill in real values. `.env.local` is gitignored.
+
+| Variable | Scope | Required | Notes |
+| --- | --- | --- | --- |
+| `GEMINI_API_KEY` | **server only** | yes | Used by `/api/*` routes for trip generation. Never exposed to the browser. Get one at [aistudio.google.com/apikey](https://aistudio.google.com/apikey). |
+| `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` | **public** | yes | Browser-side Maps JS key. Restrict it to your deployed origin in the GCP console. |
+
+> **Security note:** any variable prefixed with `NEXT_PUBLIC_` is bundled into the client JS. Do **not** put server secrets behind that prefix.
+
 ## Getting Started
 
 First, run the development server:

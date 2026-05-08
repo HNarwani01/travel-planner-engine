@@ -7,6 +7,7 @@ import NextLink from 'next/link';
 import { Button, Badge, useToast } from '@/components/ui';
 import { LuckyResult, DayItinerary, Activity } from '@/types';
 import MapView from '@/components/plan/MapView';
+import { getPhotoForDestination } from '@/services/places.service';
 
 // ─── Typewriter hook ──────────────────────────────────────────────────────────
 
@@ -138,6 +139,7 @@ export default function LuckyResultPage() {
   const { toast } = useToast();
   const [result, setResult] = useState<LuckyResult | null>(null);
   const [ready, setReady]   = useState(false);
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [highlightVisible, setHighlightVisible] = useState<boolean[]>([]);
 
   useEffect(() => {
@@ -150,6 +152,11 @@ export default function LuckyResultPage() {
       setTimeout(() => setHighlightVisible([true]), 2400);
       setTimeout(() => setHighlightVisible([true, true]), 2700);
       setTimeout(() => setHighlightVisible([true, true, true]), 3000);
+      // Fetch real photo
+      getPhotoForDestination(`${data.destination}, ${data.country}`).then(url => {
+        if (url) setPhotoUrl(url);
+      });
+
       setReady(true);
     } catch {
       router.replace('/feeling-lucky');
@@ -179,7 +186,7 @@ export default function LuckyResultPage() {
     );
   }
 
-  const heroImage = `https://source.unsplash.com/1200x600/?${encodeURIComponent(result.destination + ',' + result.country)}`;
+  const heroImage = photoUrl || `https://source.unsplash.com/1200x600/?${encodeURIComponent(result.destination + ',' + result.country)}`;
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#0A0A0F', color: '#fff', paddingBottom: '5rem' }}>
