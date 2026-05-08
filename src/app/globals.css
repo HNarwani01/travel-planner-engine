@@ -1,5 +1,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 :root {
   --bg-color: #FAFAF8;
   --primary-color: #1B2B4B;
@@ -57,18 +61,24 @@ button {
 
 input, select, textarea {
   font-family: inherit;
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  padding: 0.75rem;
-  font-size: 1rem;
+  background-color: #1E1E2E;
+  border: 1px solid #2E2E3E;
+  border-radius: 12px;
+  padding: 16px;
+  font-size: 16px;
+  color: #ffffff;
   width: 100%;
   transition: var(--transition);
 }
 
+input::placeholder, textarea::placeholder {
+  color: #8B8B9E;
+}
+
 input:focus, select:focus, textarea:focus {
   outline: none;
-  border-color: var(--accent-color);
-  box-shadow: 0 0 0 3px rgba(255, 107, 74, 0.2);
+  border-color: #6C63FF;
+  box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.18);
 }
 
 /* Layout */

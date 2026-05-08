@@ -1,7 +1,6 @@
 'use client';
 import React from 'react';
 import LoginForm from '../../components/login/LoginForm';
-import Starfield from '../../components/ui/Starfield';
 
 export default function LoginPage() {
   return (
@@ -15,7 +14,6 @@ export default function LoginPage() {
       justifyContent: 'center',
       position: 'relative'
     }}>
-      <Starfield />
       <LoginForm />
     </div>
   );

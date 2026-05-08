@@ -1,9 +1,7 @@
 'use client';
 import { useRouter } from 'next/navigation';
 import React, { useState } from 'react';
-import Card from '../ui/Card';
-import Input from '../ui/Input';
-import Button from '../ui/Button';
+import { Button, Input } from '@/components/ui';
 import Link from 'next/link';
 
 export default function LoginForm() {
@@ -34,13 +32,14 @@ export default function LoginForm() {
         Every journey starts here
       </div>
 
-      <Card style={{ 
+      <div style={{ 
         textAlign: 'center', 
         padding: '3rem', 
         width: '100%',
-        boxShadow: '0 0 30px rgba(108,99,255,0.1)',
-        border: '1px solid rgba(108,99,255,0.2)',
-        backgroundColor: '#13131A'
+        boxShadow: '0 0 0 1px rgba(108,99,255,0.25), 0 0 40px rgba(108,99,255,0.15)',
+        border: '1px solid rgba(108,99,255,0.3)',
+        backgroundColor: '#13131A',
+        borderRadius: '16px'
       }}>
         <h2 style={{ marginBottom: '2rem', color: '#fff', fontSize: '1.8rem', fontWeight: 600 }}>Welcome back</h2>
         
@@ -49,27 +48,22 @@ export default function LoginForm() {
             type="text" 
             placeholder="Username (optional)" 
             value={username}
-            onChange={e => setUsername(e.target.value)}
+            onChange={(value) => setUsername(value)}
           />
           <Input 
             type="password" 
             placeholder="Password (optional)" 
             value={password}
-            onChange={e => setPassword(e.target.value)}
+            onChange={(value) => setPassword(value)}
           />
-          <Button type="submit" fullWidth style={{ 
-            marginTop: '0.5rem', 
-            backgroundColor: '#6C63FF', 
-            border: 'none',
-            boxShadow: '0 4px 14px 0 rgba(108, 99, 255, 0.39)' 
-          }}>
+          <Button type="submit" fullWidth size="lg">
             Start Wandering
           </Button>
           <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.85rem', marginTop: '0.5rem' }}>
             No account needed — just wander in
           </div>
         </form>
-      </Card>
+      </div>
     </div>
   );
 }

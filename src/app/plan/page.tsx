@@ -6,10 +6,7 @@ import { TripRequest } from '../../types';
 import { useTrip } from '../../hooks/useTrip';
 import { INTERESTS, CONSTRAINTS, BUDGETS } from '../../constants';
 
-import Button from '../../components/ui/Button';
-import Input from '../../components/ui/Input';
-import Card from '../../components/ui/Card';
-import LoadingSpinner from '../../components/ui/LoadingSpinner';
+import { Button, Input, Loader } from '@/components/ui';
 
 import ItineraryCard from '../../components/plan/ItineraryCard';
 import MapView from '../../components/plan/MapView';
@@ -62,7 +59,7 @@ export default function PlanPage() {
       )}
 
       {!tripPlan && !loading && (
-        <Card style={{ maxWidth: '600px', margin: '0 auto', width: '100%', backgroundColor: 'var(--card-bg)' }}>
+        <div style={{ maxWidth: '600px', margin: '0 auto', width: '100%', backgroundColor: 'var(--card-bg)', padding: '2rem', borderRadius: '16px', border: '1px solid var(--border-color)' }}>
           <div className="form-group">
             <label htmlFor="destination" className="form-label">Destination</label>
             <Input 
@@ -70,9 +67,8 @@ export default function PlanPage() {
               type="text" 
               placeholder="e.g. Kyoto, Japan" 
               value={formData.destination}
-              onChange={e => setFormData({...formData, destination: e.target.value})}
+              onChange={(value) => setFormData({...formData, destination: value})}
               required
-              style={{ backgroundColor: 'white', color: 'var(--text-primary)', border: '1px solid var(--border-color)' }}
             />
           </div>
 
@@ -82,25 +78,21 @@ export default function PlanPage() {
               <Input 
                 id="duration"
                 type="number" 
-                min="1" 
-                max="14" 
-                value={formData.duration}
-                onChange={e => setFormData({...formData, duration: parseInt(e.target.value) || 1})}
+                value={String(formData.duration)}
+                onChange={(value) => setFormData({...formData, duration: parseInt(value) || 1})}
                 required
-                style={{ backgroundColor: 'white', color: 'var(--text-primary)', border: '1px solid var(--border-color)' }}
               />
             </div>
             
             <div className="form-group" style={{ flex: 1, marginBottom: 0 }}>
               <label htmlFor="budget" className="form-label">Budget Level</label>
-              <select 
+              <Input
                 id="budget"
+                type="select"
                 value={formData.budget}
-                onChange={e => setFormData({...formData, budget: e.target.value})}
-                style={{ width: '100%', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border-color)', fontSize: '1rem' }}
-              >
-                {BUDGETS.map(b => <option key={b} value={b}>{b}</option>)}
-              </select>
+                onChange={(value) => setFormData({...formData, budget: value})}
+                options={BUDGETS}
+              />
             </div>
           </div>
 
@@ -139,17 +131,16 @@ export default function PlanPage() {
           <Button 
             fullWidth 
             onClick={handlePlanTrip}
-            disabled={loading}
-            style={{ marginTop: '1rem' }}
+            loading={loading}
           >
-            {loading ? <LoadingSpinner /> : 'Plan My Trip'}
+            Plan My Trip
           </Button>
-        </Card>
+        </div>
       )}
 
       {loading && !tripPlan && (
         <div className="flex flex-col items-center justify-center py-12">
-          <LoadingSpinner size={40} color="var(--accent-color)" />
+          <Loader variant="spinner" size="lg" />
           <h2 className="text-secondary mt-4">Planning your trip to {formData.destination}...</h2>
         </div>
       )}
@@ -159,14 +150,15 @@ export default function PlanPage() {
           <div className="left-panel">
             <div className="flex justify-between items-center mb-6">
               <h2>Your {formData.duration}-Day Itinerary</h2>
-              <button 
-                className="btn-outline" 
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={handleRegenerate}
                 disabled={loading}
+                icon={<RefreshCw size={16} className={loading ? 'spinning' : ''} />}
               >
-                <RefreshCw size={16} className={loading ? 'spinning' : ''} />
                 Regenerate
-              </button>
+              </Button>
             </div>
 
             <div className="itinerary-list">

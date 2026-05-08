@@ -1,7 +1,6 @@
 'use client';
 import React from 'react';
 import ModeCards from '../../components/home/ModeCards';
-import Starfield from '../../components/ui/Starfield';
 import Link from 'next/link';
 
 export default function HomePage() {
@@ -16,7 +15,6 @@ export default function HomePage() {
       padding: '6rem 2rem 4rem 2rem',
       position: 'relative'
     }}>
-      <Starfield />
 
       {/* Navbar */}
       <div style={{

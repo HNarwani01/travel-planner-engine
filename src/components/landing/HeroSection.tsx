@@ -1,7 +1,7 @@
 'use client';
 import { useRouter } from 'next/navigation';
 import React from 'react';
-import Button from '../ui/Button';
+import { Button } from '@/components/ui';
 
 export default function HeroSection() {
   const router = useRouter();
