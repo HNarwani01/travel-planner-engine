@@ -1,7 +1,5 @@
 import { NextResponse } from 'next/server';
-import { GoogleGenerativeAI } from '@google/generative-ai';
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+import { generateWithFallback, cleanJson } from '@/lib/gemini';
 
 export interface LuckyRequest {
   budget: string;
@@ -19,12 +17,6 @@ export async function POST(req: Request) {
     if (!budget || !travelingWith || !vibe || !duration || !locationPref) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
-
-    if (!process.env.GEMINI_API_KEY) {
-      return NextResponse.json({ error: 'Gemini API key not configured' }, { status: 500 });
-    }
-
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
     const prompt = `You are Wandr, a magical travel AI.
 Based on these preferences, pick ONE perfect surprise destination and create a trip plan.
@@ -68,20 +60,21 @@ Return ONLY valid JSON in exactly this format — no markdown, no extra text:
 }
 Ensure coordinates are accurate for real places. Return ONLY the JSON object.`;
 
-    const result = await model.generateContent(prompt);
-    const text = result.response.text();
-    const clean = text.replace(/```json\n?|\n?```/g, '').trim();
+    const rawText = await generateWithFallback(prompt);
+    const clean   = cleanJson(rawText);
 
     let data;
     try {
       data = JSON.parse(clean);
     } catch {
-      console.error('Failed to parse Gemini lucky response:', text);
+      console.error('Failed to parse Gemini lucky response:', rawText);
       return NextResponse.json({ error: 'Failed to generate lucky destination' }, { status: 500 });
     }
 
     return NextResponse.json(data);
-  } catch {
-    return NextResponse.json({ error: `Internal server error ` }, { status: 500 });
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : String(error);
+    console.error('Error in lucky route:', msg);
+    return NextResponse.json({ error: 'Failed to generate lucky trip. Please try again.' }, { status: 500 });
   }
 }

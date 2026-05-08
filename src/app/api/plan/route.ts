@@ -1,9 +1,6 @@
 import { NextResponse } from 'next/server';
-import { GoogleGenerativeAI } from '@google/generative-ai';
 import { TripRequest } from '@/types';
-
-// Initialize Gemini API
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+import { generateWithFallback, cleanJson } from '@/lib/gemini';
 
 export async function POST(req: Request) {
   try {
@@ -17,15 +14,6 @@ export async function POST(req: Request) {
         { status: 400 }
       );
     }
-
-    if (!process.env.GEMINI_API_KEY) {
-      return NextResponse.json(
-        { error: 'Gemini API key not configured' },
-        { status: 500 }
-      );
-    }
-
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
     const interestsStr = interests.length > 0 ? interests.join(', ') : 'None';
     const constraintsStr = constraints.length > 0 ? constraints.join(', ') : 'None';
@@ -59,18 +47,14 @@ Return ONLY valid JSON in this format:
 }
 Please ensure the coordinates are roughly correct for the given places. Return ONLY JSON and no extra markdown or text.`;
 
-    const result = await model.generateContent(prompt);
-    const text = result.response.text();
-
-    // Parse the generated text
-    // Remove markdown code blocks if the model wrapped it
-    const cleanText = text.replace(/```json\n?|\n?```/g, '').trim();
+    const rawText  = await generateWithFallback(prompt);
+    const cleanText = cleanJson(rawText);
 
     let tripData;
     try {
       tripData = JSON.parse(cleanText);
-    } catch (e) {
-      console.error('Failed to parse Gemini response:', text);
+    } catch {
+      console.error('Failed to parse Gemini response:', rawText);
       return NextResponse.json(
         { error: 'Failed to generate valid itinerary data' },
         { status: 500 }
@@ -79,10 +63,11 @@ Please ensure the coordinates are roughly correct for the given places. Return O
 
     return NextResponse.json(tripData);
 
-  } catch (error) {
-    console.error('Error planning trip:', error);
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : String(error);
+    console.error('Error planning trip:', msg);
     return NextResponse.json(
-      { error: `Failed to plan trip. Please try again later. ${error}` },
+      { error: 'Failed to plan trip. Please try again later.' },
       { status: 500 }
     );
   }
