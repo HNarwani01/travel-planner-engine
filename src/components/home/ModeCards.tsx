@@ -73,7 +73,7 @@ export default function ModeCards() {
 
       {/* Vibe Check Card */}
       <div 
-        onClick={handleNavigate}
+        onClick={() => router.push('/vibe-check')}
         style={getWrapperStyle('linear-gradient(135deg, #FF6B4A, #FFB86C)')}
         onMouseOver={e => handleMouseOver(e, 'rgba(255, 107, 74, 0.25)')}
         onMouseOut={handleMouseOut}
@@ -91,7 +91,7 @@ export default function ModeCards() {
 
       {/* Feeling Lucky Card */}
       <div 
-        onClick={handleNavigate}
+        onClick={() => router.push('/feeling-lucky')}
         style={getWrapperStyle('linear-gradient(135deg, #FFD700, #FFA500)')}
         onMouseOver={e => handleMouseOver(e, 'rgba(255, 215, 0, 0.2)')}
         onMouseOut={handleMouseOut}

@@ -36,3 +36,17 @@ export interface TripRequest {
   interests: string[];
   constraints: string[];
 }
+
+export interface LuckyResult {
+  destination    : string;
+  country        : string;
+  countryEmoji   : string;
+  tagline        : string;
+  matchScore     : number;
+  estimatedBudget: string;
+  bestTimeToVisit: string;
+  whyThisMatches : string;
+  highlights     : string[];
+  days           : DayItinerary[];
+  budgetBreakdown: BudgetBreakdown;
+}

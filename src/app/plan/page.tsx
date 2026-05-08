@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { AlertCircle, RefreshCw } from 'lucide-react';
 import { TripRequest } from '../../types';
 import { useTrip } from '../../hooks/useTrip';
@@ -13,7 +13,21 @@ import MapView from '../../components/plan/MapView';
 import BudgetBreakdown from '../../components/plan/BudgetBreakdown';
 
 export default function PlanPage() {
-  const { tripPlan, loading, error, swappingActivity, planTrip, swapActivity } = useTrip();
+  const { tripPlan, setTripPlan, loading, error, swappingActivity, planTrip, swapActivity } = useTrip();
+
+  // Pick up a vibe-check result that was stored before navigating here
+  useEffect(() => {
+    const stored = sessionStorage.getItem('vibeTripPlan');
+    if (stored) {
+      try {
+        setTripPlan(JSON.parse(stored));
+      } catch {
+        // ignore malformed data
+      } finally {
+        sessionStorage.removeItem('vibeTripPlan');
+      }
+    }
+  }, [setTripPlan]);
 
   const [formData, setFormData] = useState<TripRequest>({
     destination: '',
