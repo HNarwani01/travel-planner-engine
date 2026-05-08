@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
 import NextLink from 'next/link';
 import { Button, Loader, useToast } from '@/components/ui';
+import { trackEvent } from '@/services/analytics';
 
 // ─── Questions config ─────────────────────────────────────────────────────────
 
@@ -169,6 +170,7 @@ export default function FeelingLuckyPage() {
   const handleSpin = async () => {
     if (!allAnswered) return;
     setLoading(true);
+    trackEvent('feeling_lucky_spin', { answers });
     try {
       const res = await fetch('/api/lucky', {
         method : 'POST',

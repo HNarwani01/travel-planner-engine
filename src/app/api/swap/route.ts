@@ -3,6 +3,7 @@ import { generateWithFallback, cleanJson } from '@/lib/gemini';
 import { sanitizeText, validateDestination } from '@/utils/sanitize';
 import { getClientIp, rateLimit } from '@/lib/rate-limit';
 import { validateSwapActivity } from '@/lib/validate';
+import { getCoordinates } from '@/services/geocoding.service';
 
 interface SwapRequest {
   destination: string;
@@ -82,7 +83,16 @@ Please ensure coordinates are roughly accurate.`;
       );
     }
 
-    return NextResponse.json(validated.data);
+    // Enrich swap activity with real coordinates server-side.
+    const activity = validated.data;
+    if (activity.place) {
+      const coords = await getCoordinates(`${activity.place}, ${dest.value}`);
+      if (coords) {
+        activity.coordinates = coords;
+      }
+    }
+
+    return NextResponse.json(activity);
   } catch (error) {
     console.error('Error swapping activity:', error);
     return NextResponse.json(

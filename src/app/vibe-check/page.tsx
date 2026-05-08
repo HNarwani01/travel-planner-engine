@@ -6,6 +6,7 @@ import { ArrowLeft } from 'lucide-react';
 import NextLink from 'next/link';
 import { Button, Loader, useToast } from '@/components/ui';
 import { AutocompleteInput } from '@/components/ui/AutocompleteInput';
+import { trackEvent } from '@/services/analytics';
 
 // ─── Questions ────────────────────────────────────────────────────────────────
 
@@ -151,7 +152,7 @@ export default function VibeCheckPage() {
   };
 
   const handleNext = async () => {
-    if (!selected && !(question as any).isOptional) return;
+    if (!selected && !('isOptional' in question && question.isOptional)) return;
 
     if (!isLast) {
       setCurrentQ((q) => q + 1);
@@ -184,6 +185,7 @@ export default function VibeCheckPage() {
       }
 
       sessionStorage.setItem('vibeTripPlan', JSON.stringify(data));
+      trackEvent('trip_generated', { source: 'vibe_check' });
       router.push('/plan');
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Something went wrong. Please try again.';
@@ -322,7 +324,7 @@ export default function VibeCheckPage() {
           marginBottom        : '3rem',
         }}
       >
-        {(question as any).type === 'autocomplete' ? (
+        {('type' in question && question.type === 'autocomplete') ? (
           <div style={{ marginTop: '1rem' }}>
             <AutocompleteInput
               placeholder="e.g. Paris, France (Optional)"
@@ -341,7 +343,7 @@ export default function VibeCheckPage() {
               gap                 : '0.875rem',
             }}
           >
-            {(question as any).options.map((option: string) => (
+            {question.options.map((option) => (
               <OptionCard
                 key={option}
                 label={option}
@@ -359,10 +361,10 @@ export default function VibeCheckPage() {
           variant="primary"
           size="lg"
           fullWidth
-          disabled={!selected && !(question as any).isOptional}
+          disabled={!selected && !('isOptional' in question && question.isOptional)}
           onClick={handleNext}
         >
-          {isLast ? 'Check My Vibe ✨' : selected || (question as any).isOptional ? 'Next →' : 'Select an Option'}
+          {isLast ? 'Check My Vibe ✨' : selected || ('isOptional' in question && question.isOptional) ? 'Next →' : 'Select an Option'}
         </Button>
       </div>
     </div>

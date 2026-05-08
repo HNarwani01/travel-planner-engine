@@ -4,6 +4,7 @@ import { generateWithFallback, cleanJson } from '@/lib/gemini';
 import { sanitizeText, validateDestination, validateBudget } from '@/utils/sanitize';
 import { getClientIp, rateLimit } from '@/lib/rate-limit';
 import { validateTripPlan } from '@/lib/validate';
+import { getCoordinates } from '@/services/geocoding.service';
 
 export async function POST(req: Request) {
   const ip = getClientIp(req);
@@ -105,7 +106,23 @@ Please ensure the coordinates are roughly correct for the given places. Return O
       );
     }
 
-    return NextResponse.json(validated.data);
+    // Enrich each activity with real coordinates from the Geocoding API.
+    // Gemini's coordinates are approximations; the Geocoding API provides
+    // precise lat/lng for the exact place name.
+    const enriched = validated.data;
+    await Promise.all(
+      enriched.days.flatMap((day) =>
+        day.activities.map(async (activity) => {
+          if (!activity.place) return;
+          const coords = await getCoordinates(`${activity.place}, ${dest.value}`);
+          if (coords) {
+            activity.coordinates = coords;
+          }
+        }),
+      ),
+    );
+
+    return NextResponse.json(enriched);
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : String(error);
     console.error('Error planning trip:', msg);

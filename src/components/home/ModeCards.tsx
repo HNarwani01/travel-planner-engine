@@ -2,12 +2,14 @@
 import { useRouter } from 'next/navigation';
 import React from 'react';
 import { Map, Compass, Sparkles } from 'lucide-react';
+import { trackEvent } from '@/services/analytics';
 
 export default function ModeCards() {
   const router = useRouter();
 
-  const handleNavigate = () => {
-    router.push('/plan');
+  const handleNavigate = (mode: string, path: string) => {
+    trackEvent('mode_selected', { mode });
+    router.push(path);
   };
 
   const baseCardStyle: React.CSSProperties = {
@@ -55,7 +57,7 @@ export default function ModeCards() {
     }}>
       {/* Total Lost Card */}
       <div 
-        onClick={handleNavigate}
+        onClick={() => handleNavigate('total_lost', '/plan')}
         style={getWrapperStyle('linear-gradient(135deg, #6C63FF, #B362FF)')}
         onMouseOver={e => handleMouseOver(e, 'rgba(108, 99, 255, 0.25)')}
         onMouseOut={handleMouseOut}
@@ -73,7 +75,7 @@ export default function ModeCards() {
 
       {/* Vibe Check Card */}
       <div 
-        onClick={() => router.push('/vibe-check')}
+        onClick={() => handleNavigate('vibe_check', '/vibe-check')}
         style={getWrapperStyle('linear-gradient(135deg, #FF6B4A, #FFB86C)')}
         onMouseOver={e => handleMouseOver(e, 'rgba(255, 107, 74, 0.25)')}
         onMouseOut={handleMouseOut}
@@ -91,7 +93,7 @@ export default function ModeCards() {
 
       {/* Feeling Lucky Card */}
       <div 
-        onClick={() => router.push('/feeling-lucky')}
+        onClick={() => handleNavigate('feeling_lucky', '/feeling-lucky')}
         style={getWrapperStyle('linear-gradient(135deg, #FFD700, #FFA500)')}
         onMouseOver={e => handleMouseOver(e, 'rgba(255, 215, 0, 0.2)')}
         onMouseOut={handleMouseOut}

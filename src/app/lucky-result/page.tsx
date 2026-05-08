@@ -2,12 +2,12 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, MapPin, Clock, CreditCard } from 'lucide-react';
+import { ArrowLeft, MapPin, Clock, CreditCard, Star } from 'lucide-react';
 import NextLink from 'next/link';
 import { Button, Badge, useToast } from '@/components/ui';
 import { LuckyResult, DayItinerary, Activity } from '@/types';
 import MapView from '@/components/plan/MapView';
-import { getPhotoForDestination } from '@/services/places.service';
+import { getPhotoForDestination, getPlaceDetails, PlaceSearchResult } from '@/services/places.service';
 
 // ─── Typewriter hook ──────────────────────────────────────────────────────────
 
@@ -140,6 +140,7 @@ export default function LuckyResultPage() {
   const [result, setResult] = useState<LuckyResult | null>(null);
   const [ready, setReady]   = useState(false);
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+  const [placeDetails, setPlaceDetails] = useState<PlaceSearchResult | null>(null);
   const [highlightVisible, setHighlightVisible] = useState<boolean[]>([]);
 
   useEffect(() => {
@@ -152,9 +153,13 @@ export default function LuckyResultPage() {
       setTimeout(() => setHighlightVisible([true]), 2400);
       setTimeout(() => setHighlightVisible([true, true]), 2700);
       setTimeout(() => setHighlightVisible([true, true, true]), 3000);
-      // Fetch real photo
+      // Fetch real photo from Places API
       getPhotoForDestination(`${data.destination}, ${data.country}`).then(url => {
         if (url) setPhotoUrl(url);
+      });
+      // Fetch rich place data (rating, address) from Places Text Search
+      getPlaceDetails(`${data.destination}, ${data.country}`).then(details => {
+        if (details) setPlaceDetails(details);
       });
 
       setReady(true);
@@ -282,6 +287,29 @@ export default function LuckyResultPage() {
                   <div style={{ color: '#fff', fontWeight: 600, fontSize: '0.9rem', marginTop: '0.1rem' }}>{s.value}</div>
                 </div>
               ))}
+              {/* Real data from Google Places */}
+              {placeDetails?.rating !== undefined && (
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '1.2rem', marginBottom: '0.2rem' }}>⭐</div>
+                  <div style={{ color: '#8B8B9E', fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Rating</div>
+                  <div style={{ color: '#fff', fontWeight: 600, fontSize: '0.9rem', marginTop: '0.1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.25rem' }}>
+                    <Star size={12} style={{ color: '#FFB347', fill: '#FFB347' }} />
+                    {placeDetails.rating.toFixed(1)}
+                    {placeDetails.user_ratings_total !== undefined && (
+                      <span style={{ color: '#8B8B9E', fontWeight: 400, fontSize: '0.75rem' }}>
+                        ({placeDetails.user_ratings_total.toLocaleString()})
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+          {/* Verified address from Google Places */}
+          {destDone && placeDetails?.formatted_address && (
+            <div style={{ marginTop: '1.25rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', color: '#8B8B9E', fontSize: '0.8rem' }}>
+              <MapPin size={13} style={{ flexShrink: 0 }} />
+              <span>{placeDetails.formatted_address}</span>
             </div>
           )}
         </div>

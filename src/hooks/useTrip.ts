@@ -1,19 +1,20 @@
 import { useState } from 'react';
 import { TripPlan, TripRequest, Activity } from '../types';
 import { generateTripPlan, swapTripActivity } from '../services/gemini.service';
+import { trackEvent } from '../services/analytics';
 
 export const useTrip = () => {
   const [tripPlan, setTripPlan] = useState<TripPlan | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [swappingActivity, setSwappingActivity] = useState<{day: number, time: string} | null>(null);
+  const [swappingActivity, setSwappingActivity] = useState<{ day: number; time: string } | null>(null);
 
   const planTrip = async (formData: TripRequest, isRegenerate = false) => {
     if (!formData.destination.trim()) {
       setError('Please enter a destination.');
       return false;
     }
-    
+
     if (formData.duration < 1 || formData.duration > 14) {
       setError('Trip duration must be between 1 and 14 days.');
       return false;
@@ -28,39 +29,50 @@ export const useTrip = () => {
     try {
       const data = await generateTripPlan(formData);
       setTripPlan(data);
+      trackEvent('trip_generated', {
+        destination: formData.destination,
+        duration: formData.duration,
+        budget: formData.budget,
+      });
       return data;
-    } catch (err: any) {
-      setError(err.message || 'Something went wrong. Please try again.');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Something went wrong. Please try again.';
+      setError(message);
       return false;
     } finally {
       setLoading(false);
     }
   };
 
-  const swapActivity = async (destination: string, dayIndex: number, dayNumber: number, activity: Activity) => {
+  const swapActivity = async (
+    destination: string,
+    dayIndex: number,
+    dayNumber: number,
+    activity: Activity,
+  ) => {
     setSwappingActivity({ day: dayNumber, time: activity.time });
     setError(null);
 
     try {
       const data = await swapTripActivity(destination, activity, activity.time);
 
-      setTripPlan(prev => {
+      setTripPlan((prev) => {
         if (!prev) return prev;
-        const newPlan = { ...prev };
-        const newDays = [...newPlan.days];
-        const newActivities = [...newDays[dayIndex].activities];
-        
-        const actIndex = newActivities.findIndex(a => a.time === activity.time);
-        if (actIndex !== -1) {
-          newActivities[actIndex] = data;
-        }
-        
-        newDays[dayIndex] = { ...newDays[dayIndex], activities: newActivities };
-        return { ...newPlan, days: newDays };
+        const newDays = prev.days.map((day, i) => {
+          if (i !== dayIndex) return day;
+          const newActivities = day.activities.map((a) =>
+            a.time === activity.time ? data : a,
+          );
+          return { ...day, activities: newActivities };
+        });
+        return { ...prev, days: newDays };
       });
+
+      trackEvent('activity_swapped', { destination, day: dayNumber, time: activity.time });
       return true;
-    } catch (err: any) {
-      setError(err.message || 'Failed to swap activity. Try again.');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to swap activity. Try again.';
+      setError(message);
       return false;
     } finally {
       setSwappingActivity(null);
@@ -74,6 +86,6 @@ export const useTrip = () => {
     error,
     swappingActivity,
     planTrip,
-    swapActivity
+    swapActivity,
   };
 };

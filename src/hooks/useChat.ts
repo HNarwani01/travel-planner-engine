@@ -1,14 +1,21 @@
 import { useState } from 'react';
 
-export const useChat = () => {
-  const [messages, setMessages] = useState<any[]>([]);
+export interface ChatMessage {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: number;
+}
 
-  const sendMessage = async (message: string) => {
+export const useChat = () => {
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+
+  const sendMessage = async (_message: string) => {
     // To be implemented
   };
 
   return {
     messages,
-    sendMessage
+    sendMessage,
   };
 };
